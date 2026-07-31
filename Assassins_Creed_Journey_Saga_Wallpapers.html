@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assassin's Creed - The Journey Saga</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ac-red: #c8102e;
+            --ac-red-dark: #8b0000;
+            --ac-gold: #c9a96e;
+            --ac-dark: #0a0a0a;
+            --ac-dark-elevated: #111;
+            --ac-gray: #1a1a1a;
+            --ac-text: #d4d4d4;
+            --ac-text-dim: #888;
+            --ac-white: #f0f0f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ac-red) var(--ac-dark);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--ac-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--ac-red); border-radius: 3px; }
+
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--ac-dark);
+            color: var(--ac-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body.modal-open { overflow: hidden; }
+
+        #preloader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: #000;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.6s, visibility 0.6s;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #preloader .logo-icon {
+            width: 80px; height: 80px;
+            border: 3px solid var(--ac-red);
+            transform: rotate(45deg);
+            animation: preloaderPulse 1.4s ease-in-out infinite;
+            position: relative;
+        }
+        #preloader .logo-icon::after {
+            content: '';
+            position: absolute; inset: 8px;
+            border: 2px solid var(--ac-gold);
+        }
+        @keyframes preloaderPulse {
+            0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(0.9); }
+            50% { opacity: 1; transform: rotate(45deg) scale(1); }
+        }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(10,10,10,0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(200,16,46,0.3);
+            padding: 0 2rem;
+            transition: padding 0.3s, background 0.3s;
+        }
+        nav.scrolled { padding: 0 2rem; background: rgba(10,10,10,0.98); }
+        nav .nav-inner {
+            max-width: 1300px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        nav .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem; font-weight: 900; color: var(--ac-white);
+            letter-spacing: 3px; text-transform: uppercase; text-decoration: none;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .nav-logo{
+            width:80px;
+            height:80px;
+            object-fit:contain;
+            display:block;
+            border-radius:50%;
+        }
+        nav .logo{
+            display:flex;
+            align-items:center;
+            gap:5px;
+        }
+        nav .nav-links {
+            display: flex; list-style: none; gap: 2.2rem; align-items: center;
+        }
+        nav .nav-links a {
+            color: var(--ac-text-dim); text-decoration: none;
+            font-family: 'Cinzel', serif;
+            font-size: 0.78rem; font-weight: 600; letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+            position: relative;
+        }
+        nav .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 1px; background: var(--ac-red);
+            transform: scaleX(0); transition: transform 0.3s;
+        }
+        nav .nav-links a:hover { color: var(--ac-white); }
+        nav .nav-links a:hover::after { transform: scaleX(1); }
+        nav .nav-links .btn-join {
+            background: var(--ac-red); color: #fff !important;
+            padding: 8px 22px; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+            transition: background 0.3s;
+        }
+        nav .nav-links .btn-join:hover { background: #e01235; }
+        nav .nav-links .btn-join::after { display: none; }
+
+        nav .hamburger {
+            display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001;
+            background: none; border: none; padding: 4px;
+        }
+        nav .hamburger span {
+            width: 26px; height: 2px; background: var(--ac-white);
+            transition: all 0.3s;
+        }
+        nav .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+        nav .hamburger.active span:nth-child(2) { opacity: 0; }
+        nav .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            background:
+                radial-gradient(ellipse at 30% 50%, rgba(200,16,46,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 30%, rgba(201,169,110,0.06) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0a0a 0%, #0d0d0d 40%, #111 100%);
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px);
+            pointer-events: none;
+        }
+        .hero .particles { position: absolute; inset: 0; pointer-events: none; }
+        .hero .particle {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: var(--ac-gold);
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(100vh) scale(0); }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.2; }
+            100% { opacity: 0; transform: translateY(-10vh) scale(1.5); }
+        }
+
+        .hero-content { text-align: center; z-index: 2; padding: 0 1.5rem; }
+        .hero-crest {
+            width: 140px; height: 140px; margin: 0 auto 2rem;
+            position: relative;
+            animation: crestFloat 4s ease-in-out infinite;
+        }
+        @keyframes crestFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .hero-crest{
+            width:150px;
+            height:150px;
+            margin:0 auto 30px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+        .hero-logo{
+        width:300%; 
+        height:200%;
+        object-fit:contain;
+        display:block;
+}
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            color: var(--ac-white);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            line-height: 1.1;
+            margin-bottom: 0.6rem;
+        }
+        .hero-title .accent { color: var(--ac-red); }
+        .hero-subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+            font-weight: 400;
+            color: var(--ac-gold);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        .hero-tagline {
+            font-size: 1.15rem; color: var(--ac-text-dim);
+            font-style: italic; max-width: 500px; margin: 0 auto 2.5rem;
+        }
+        .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            display: inline-block; padding: 14px 36px;
+            font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; text-decoration: none;
+            clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+            transition: all 0.3s; cursor: pointer; border: none;
+        }
+        .btn-primary { background: var(--ac-red); color: #fff; }
+        .btn-primary:hover { background: #e01235; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,16,46,0.35); }
+        .btn-outline {
+            background: transparent; color: var(--ac-white);
+            border: 1.5px solid var(--ac-gold);
+        }
+        .btn-outline:hover { background: rgba(201,169,110,0.1); transform: translateY(-2px); }
+
+        .hero-scroll {
+            position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            animation: bounceDown 2s ease-in-out infinite;
+        }
+        .hero-scroll span { font-size: 0.7rem; letter-spacing: 3px; color: var(--ac-text-dim); text-transform: uppercase; font-family: 'Cinzel', serif; }
+        .hero-scroll .line {
+            width: 1px; height: 40px;
+            background: linear-gradient(to bottom, var(--ac-red), transparent);
+        }
+        @keyframes bounceDown {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+
+        section { padding: 6rem 2rem; position: relative; }
+
+        .section-header { text-align: center; margin-bottom: 3rem; }
+        .section-divider {
+            width: 60px; height: 3px; background: var(--ac-red);
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        .section-divider::before, .section-divider::after {
+            content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+            width: 6px; height: 6px; background: var(--ac-gold);
+        }
+        .section-divider::before { left: -14px; }
+        .section-divider::after { right: -14px; }
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 700; color: var(--ac-white);
+            letter-spacing: 4px; text-transform: uppercase;
+        }
+        .section-subtitle {
+            color: var(--ac-text-dim); margin-top: 0.6rem;
+            font-size: 1.05rem; font-style: italic;
+        }
+
+        /* ── Stats bar ── */
+        .stats-bar {
+            display: flex; justify-content: center; gap: 50px; flex-wrap: wrap;
+            padding: 1rem 2rem 0; max-width: 900px; margin: 0 auto 1rem;
+        }
+        .stat { text-align: center; }
+        .stat .num {
+            font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 900; color: var(--ac-gold);
+        }
+        .stat .lbl {
+            font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--ac-text-dim);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        /* ── Search ── */
+        .search-wrap { text-align: center; margin-bottom: 2.5rem; }
+        .search-wrap input {
+            background: var(--ac-dark-elevated); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--ac-white); padding: 12px 24px; border-radius: 30px;
+            width: 100%; max-width: 440px; font-family: 'Crimson Text', serif; font-size: 1rem;
+            outline: none; transition: border-color 0.3s;
+        }
+        .search-wrap input:focus { border-color: var(--ac-red); }
+        .search-wrap input::placeholder { color: #555; font-style: italic; }
+
+        /* ── Games Grid ── */
+        #games {
+            background: linear-gradient(180deg, var(--ac-dark) 0%, #0d0d0d 100%);
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.8rem;
+            max-width: 1400px; margin: 0 auto;
+        }
+        .game-card {
+            background: var(--ac-dark-elevated);
+            border: 1px solid rgba(255,255,255,0.06);
+            overflow: hidden;
+            transition: transform 0.35s, border-color 0.35s, box-shadow 0.35s;
+            position: relative;
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(200,16,46,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,16,46,0.12);
+        }
+        .game-card.hidden { display: none; }
+        .game-card-img {
+            height: 200px; position: relative; overflow: hidden;
+            background: var(--ac-gray);
+        }
+        .game-card-img .bg {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center;
+            transition: transform 0.6s;
+        }
+        .game-card:hover .bg { transform: scale(1.06); }
+        .game-card-img::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(10,10,10,0.95) 0%, transparent 50%);
+        }
+        .game-card-img .era-badge {
+            position: absolute; bottom: 12px; left: 16px; z-index: 2;
+            font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--ac-gold);
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        .game-card-img .year-badge {
+            position: absolute; top: 12px; right: 12px; z-index: 2;
+            font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 900;
+            color: rgba(255,255,255,0.25);
+        }
+        .game-card-body { padding: 1.5rem 1.6rem 1.8rem; position: relative; }
+        .game-card-body h3 {
+            font-family: 'Cinzel', serif; font-size: 1.15rem;
+            color: var(--ac-white); letter-spacing: 1px; margin-bottom: 0.3rem;
+        }
+        .game-card-body .setting {
+            font-size: 0.85rem; color: var(--ac-text-dim); margin-bottom: 0.8rem;
+        }
+        .game-card-body .proto-label {
+            font-family: 'Cinzel', serif; font-size: 0.6rem; color: #666;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .game-card-body .proto-name {
+            font-family: 'Cinzel', serif; font-size: 0.95rem; color: var(--ac-gold);
+            font-weight: 600; margin-bottom: 0.7rem;
+        }
+        .game-card-body .story-blurb {
+            color: var(--ac-text-dim); font-size: 0.9rem; line-height: 1.55;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .game-card-body .click-hint {
+            position: absolute; bottom: 8px; right: 16px;
+            font-family: 'Cinzel', serif; font-size: 0.6rem; color: #444;
+            letter-spacing: 1px; text-transform: uppercase;
+            transition: color 0.3s;
+        }
+        .game-card:hover .click-hint { color: var(--ac-red); }
+
+        /* ── Modal Overlay ── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 5000;
+            background: rgba(0,0,0,0.88);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s;
+            backdrop-filter: blur(6px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal {
+            background: #151515;
+            border: 1px solid rgba(200,16,46,0.25);
+            width: 92%; max-width: 820px; max-height: 88vh;
+            overflow-y: auto; border-radius: 4px;
+            padding: 2.5rem;
+            position: relative;
+            transform: translateY(24px);
+            transition: transform 0.4s;
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+
+        .modal::-webkit-scrollbar { width: 5px; }
+        .modal::-webkit-scrollbar-track { background: transparent; }
+        .modal::-webkit-scrollbar-thumb { background: #333; }
+
+        .modal .close-btn {
+            position: sticky; top: 0; float: right; z-index: 5;
+            width: 38px; height: 38px; border: 1px solid rgba(255,255,255,0.15);
+            background: #1a1a1a; color: var(--ac-white); font-size: 1.3rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .modal .close-btn:hover { background: var(--ac-red); border-color: var(--ac-red); }
+
+        .modal h2 {
+            font-family: 'Cinzel', serif; font-size: 2rem; color: var(--ac-white);
+            letter-spacing: 1px; margin-bottom: 2px;
+        }
+        .modal .modal-setting {
+            font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--ac-gold);
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;
+        }
+        .modal .modal-year { color: #555; font-size: 0.9rem; margin-bottom: 1.8rem; }
+
+        .modal .detail-block {
+            margin-bottom: 1.8rem; padding-bottom: 1.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .modal .detail-block:last-of-type { border-bottom: none; }
+
+        .modal .detail-block h3 {
+            font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--ac-red);
+            letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.8rem;
+        }
+        .modal .detail-block p {
+            color: #bbb; font-size: 0.95rem; line-height: 1.8;
+        }
+
+        .proto-sheet {
+            background: #111; border: 1px solid rgba(255,255,255,0.05);
+            padding: 1.5rem; margin-top: 0.5rem;
+        }
+        .proto-sheet h4 {
+            font-family: 'Cinzel', serif; color: var(--ac-gold); font-size: 1.1rem;
+            margin-bottom: 0.8rem; letter-spacing: 1px;
+        }
+        .proto-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 0.6rem;
+        }
+        .proto-grid .field { font-size: 0.82rem; color: #999; }
+        .proto-grid .field strong {
+            display: block; font-family: 'Cinzel', serif; font-size: 0.6rem;
+            color: #777; text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 1px;
+        }
+
+        .targets-list { color: #aaa; font-size: 0.9rem; line-height: 1.9; }
+        .targets-list span { color: var(--ac-gold); margin-right: 6px; }
+
+        .cast-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.9rem;
+        }
+        .cast-card {
+            background: #111; border: 1px solid rgba(255,255,255,0.06);
+            border-left: 3px solid var(--cast-color, var(--ac-red));
+            padding: 1rem 1.1rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .cast-card:hover { background: #151515; border-color: rgba(255,255,255,0.12); }
+        .cast-card .cast-name {
+            font-family: 'Cinzel', serif; color: var(--ac-white); font-size: 0.95rem;
+            letter-spacing: 0.5px; margin-bottom: 4px;
+        }
+        .cast-card .cast-role {
+            display: inline-block; font-family: 'Cinzel', serif; font-size: 0.6rem;
+            color: var(--ac-dark); background: var(--cast-color, var(--ac-gold));
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 2px 8px; margin-bottom: 8px;
+        }
+        .cast-card .cast-desc {
+            font-size: 0.82rem; color: #999; line-height: 1.6;
+        }
+
+        .modal-nav {
+            display: flex; gap: 10px; align-items: center; margin-top: 1.5rem;
+        }
+        .modal-nav button {
+            flex: 1; padding: 10px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);
+            color: var(--ac-text); font-family: 'Cinzel', serif; font-size: 0.7rem;
+            letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .modal-nav button:hover { border-color: var(--ac-red); color: #fff; }
+        .modal-nav button:disabled { opacity: 0.3; cursor: default; }
+        .modal-nav .counter {
+            text-align: center; color: #555; font-size: 0.8rem; flex: 0 0 60px;
+            font-family: 'Cinzel', serif;
+        }
+
+        /* ── Timeline Section ── */
+        #timeline {
+            background: linear-gradient(180deg, #0d0d0d 0%, var(--ac-dark) 100%);
+        }
+        .timeline-wrap {
+            max-width: 800px; margin: 0 auto; position: relative;
+            padding-left: 2rem;
+        }
+        .timeline-wrap::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 1px; background: linear-gradient(to bottom, var(--ac-red), var(--ac-gold), transparent);
+        }
+        .tl-item {
+            position: relative; padding: 0 0 2.2rem 2.5rem;
+            cursor: pointer; transition: transform 0.3s;
+        }
+        .tl-item:hover { transform: translateX(4px); }
+        .tl-item::before {
+            content: ''; position: absolute; left: -4px; top: 6px;
+            width: 9px; height: 9px; background: var(--ac-red);
+            transform: rotate(45deg); transition: background 0.3s;
+        }
+        .tl-item:hover::before { background: var(--ac-gold); }
+        .tl-item .era {
+            font-family: 'Cinzel', serif; font-size: 0.75rem;
+            color: var(--ac-gold); letter-spacing: 3px; margin-bottom: 0.3rem;
+        }
+        .tl-item h3 {
+            font-family: 'Cinzel', serif; font-size: 1.2rem;
+            color: var(--ac-white); letter-spacing: 1px;
+        }
+        .tl-item p { color: var(--ac-text-dim); margin-top: 0.3rem; max-width: 500px; font-size: 0.9rem; }
+
+        /* ── Features ── */
+        #features {
+            background: var(--ac-dark-elevated);
+            border-top: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .feature-card { text-align: center; padding: 2rem 1.5rem; transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-4px); }
+        .feature-icon {
+            width: 64px; height: 64px; margin: 0 auto 1.5rem;
+            border: 2px solid var(--ac-red); position: relative;
+            transform: rotate(45deg);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .feature-icon span { transform: rotate(-45deg); font-size: 1.5rem; }
+        .feature-card h3 {
+            font-family: 'Cinzel', serif; font-size: 1rem;
+            color: var(--ac-white); letter-spacing: 2px;
+            margin-bottom: 0.6rem; text-transform: uppercase;
+        }
+        .feature-card p { color: var(--ac-text-dim); font-size: 0.9rem; }
+
+        /* ── CTA ── */
+        #join {
+            background:
+                radial-gradient(ellipse at center, rgba(200,16,46,0.08) 0%, transparent 70%),
+                var(--ac-dark);
+        }
+        .newsletter-box {
+            max-width: 580px; margin: 0 auto; text-align: center;
+            padding: 3rem; border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(17,17,17,0.8);
+        }
+        .newsletter-box h2 {
+            font-family: 'Cinzel', serif; font-size: 1.6rem;
+            color: var(--ac-white); letter-spacing: 3px; margin-bottom: 0.8rem;
+        }
+        .newsletter-box p { color: var(--ac-text-dim); margin-bottom: 2rem; }
+        .newsletter-form { display: flex; gap: 0; }
+        .newsletter-form input {
+            flex: 1; padding: 14px 18px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--ac-white); font-family: 'Crimson Text', serif; font-size: 0.95rem;
+            outline: none; transition: border-color 0.3s;
+        }
+        .newsletter-form input:focus { border-color: var(--ac-red); }
+        .newsletter-form button {
+            padding: 14px 28px;
+            background: var(--ac-red); color: #fff; border: none;
+            font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .newsletter-form button:hover { background: #e01235; }
+
+        footer {
+            background: #050505; padding: 4rem 2rem 2rem;
+            border-top: 1px solid rgba(200,16,46,0.2);
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+        }
+        .footer-col h4 {
+            font-family: 'Cinzel', serif; font-size: 0.85rem;
+            color: var(--ac-white); letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 1.2rem;
+        }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 0.5rem; }
+        .footer-col a { color: var(--ac-text-dim); text-decoration: none; font-size: 0.9rem; transition: color 0.3s; }
+        .footer-col a:hover { color: var(--ac-red); }
+        .footer-bottom {
+            text-align: center; margin-top: 3rem; padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            color: var(--ac-text-dim); font-size: 0.8rem;
+        }
+        .footer-bottom .creed { font-style: italic; color: var(--ac-gold); margin-top: 0.4rem; }
+
+        @media (max-width: 768px) {
+            nav .nav-links {
+                position: fixed; top: 0; right: 0; bottom: 0;
+                width: 280px; background: rgba(5,5,5,0.97);
+                flex-direction: column; justify-content: center; gap: 2rem;
+                transform: translateX(100%); transition: transform 0.4s;
+            }
+            nav .nav-links.open { transform: translateX(0); }
+            nav .hamburger { display: flex; }
+            .newsletter-form { flex-direction: column; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .hero-title { letter-spacing: 3px; }
+            .games-grid { grid-template-columns: 1fr; }
+            .modal { padding: 1.5rem; }
+            .stats-bar { gap: 24px; }
+        }
+
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div id="preloader"><div class="logo-icon"></div></div>
+
+    <nav id="navbar">
+        <div class="nav-inner">
+        <a href="#" class="logo">
+    <img src="https://raw.githubusercontent.com/Skyborg141/Assasins-Creed-Website/c76555dfe470460f98f64fac16b82415bb27b02b/aclogo.png"
+     class="nav-logo"
+     alt="Assassin's Creed Logo">
+    <span>Assassin's Creed</span>
+</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#games">Games</a></li>
+                <li><a href="#timeline">Timeline</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#join" class="btn-join">Join the Creed</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="particles" id="particles"></div>
+        <div class="hero-content">
+        <div class="hero-crest">
+            <img src="https://raw.githubusercontent.com/Skyborg141/Assasins-Creed-Website/c76555dfe470460f98f64fac16b82415bb27b02b/aclogo.png"
+     class="hero-logo"
+     alt="Assassin's Creed Logo">
+        </div>
+            <h1 class="hero-title">Assassin's<br><span class="accent">Creed</span></h1>
+            <p class="hero-subtitle">Nothing is True &middot; Everything is Permitted</p>
+            <p class="hero-tagline">Step into the shadows. Forge your destiny. Become the ultimate assassin in a saga spanning centuries of history.</p>
+            <div class="hero-buttons">
+                <a href="#games" class="btn btn-primary">Explore the Saga</a>
+                <a href="#join" class="btn btn-outline">Join the Brotherhood</a>
+            </div>
+        </div>
+        <div class="hero-scroll"><span>Scroll</span><div class="line"></div></div>
+    </section>
+
+    <section id="games">
+        <div class="section-header reveal">
+            <div class="section-divider"></div>
+            <h2 class="section-title">The Journey Saga</h2>
+            <p class="section-subtitle">All 14 mainline chapters — click any game for full protagonist details &amp; complete story</p>
+        </div>
+        <div class="stats-bar reveal">
+            <div class="stat"><div class="num" id="statGames">14</div><div class="lbl">Games</div></div>
+            <div class="stat"><div class="num" id="statProtos">14</div><div class="lbl">Protagonists</div></div>
+            <div class="stat"><div class="num" id="statEras">14</div><div class="lbl">Historical Eras</div></div>
+            <div class="stat"><div class="num" id="statSpan">2,470</div><div class="lbl">Years of History</div></div>
+        </div>
+        <div class="search-wrap reveal">
+            <input type="text" id="searchInput" placeholder="Search by game, protagonist, setting, or era…">
+        </div>
+        <div class="games-grid" id="gamesGrid"></div>
+    </section>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modalContent"></div>
+    </div>
+
+    <section id="timeline">
+        <div class="section-header reveal">
+            <div class="section-divider"></div>
+            <h2 class="section-title">Through the Ages</h2>
+            <p class="section-subtitle">The eternal conflict between Assassins and Templars spans millennia — click any era for details</p>
+        </div>
+        <div class="timeline-wrap" id="timelineWrap"></div>
+    </section>
+
+    <section id="features">
+        <div class="section-header reveal">
+            <div class="section-divider"></div>
+            <h2 class="section-title">Pillars of the Creed</h2>
+            <p class="section-subtitle">What makes Assassin's Creed an unforgettable experience</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x1F5E1;&#xFE0F;</span></div>
+                <h3>Stealth</h3>
+                <p>Blend into crowds, strike from the shadows, and vanish without a trace. The hidden blade is your greatest ally.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x1F3DB;&#xFE0F;</span></div>
+                <h3>Parkour</h3>
+                <p>Scale towering cathedrals and leap across rooftops with fluid, breathtaking freerunning through living cities.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x2694;&#xFE0F;</span></div>
+                <h3>Combat</h3>
+                <p>Master devastating swordplay, counter-attacks, and an arsenal of period-authentic weaponry.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x1F30D;</span></div>
+                <h3>Open World</h3>
+                <p>Explore meticulously recreated historical settings — from ancient pyramids to Victorian London.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x1F4DC;</span></div>
+                <h3>Rich Story</h3>
+                <p>Unravel conspiracies spanning centuries in a deep, interconnected narrative that blends history with fiction.</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><span>&#x1F3AD;</span></div>
+                <h3>Historical Icons</h3>
+                <p>Meet Leonardo da Vinci, Cleopatra, Socrates, and other legendary figures brought vividly to life.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="join">
+        <div class="newsletter-box reveal">
+            <h2>Join the Brotherhood</h2>
+            <p>Receive news, lore, and exclusive content from the Assassin's Creed universe. The shadows welcome you.</p>
+            <form class="newsletter-form" onsubmit="handleNewsletter(event)">
+                <input type="email" placeholder="Enter your email address" required>
+                <button type="submit">Initiate</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>Games</h4>
+                <ul>
+                    <li><a href="#" onclick="openGameById('acsh')">Assassin's Creed Shadows</a></li>
+                    <li><a href="#" onclick="openGameById('acm')">Assassin's Creed Mirage</a></li>
+                    <li><a href="#" onclick="openGameById('acv')">Assassin's Creed Valhalla</a></li>
+                    <li><a href="#" onclick="openGameById('acod')">Assassin's Creed Odyssey</a></li>
+                    <li><a href="#games">View All 14 Games &rarr;</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Universe</h4>
+                <ul>
+                    <li><a href="#">The Creed</a></li>
+                    <li><a href="#">The Templar Order</a></li>
+                    <li><a href="#">Pieces of Eden</a></li>
+                    <li><a href="#">The Animus</a></li>
+                    <li><a href="#">Lore Database &rarr;</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Community</h4>
+                <ul>
+                    <li><a href="#">Discord</a></li>
+                    <li><a href="#">Reddit</a></li>
+                    <li><a href="#">Forums</a></li>
+                    <li><a href="#">Fan Art</a></li>
+                    <li><a href="#">Esports &rarr;</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Ubisoft</h4>
+                <ul><li><a href="#">About Ubisoft</a></li><li><a href="#">Careers</a></li><li><a href="#">Support</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Use &rarr;</a></li></ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Ubisoft Entertainment. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+<script>
+// ═══════════════════════════════════════════
+//  GAME DATA — All 14 Journey Saga entries
+// ═══════════════════════════════════════════
+var games = [
+  {
+    id: "ac1",
+    image: "https://images3.alphacoders.com/396/thumb-1920-39629.jpg", title: "Assassin's Creed", year: 2007, order: 1191,
+    setting: "Holy Land — Masyaf, Damascus, Acre, Jerusalem",
+    era: "Third Crusade, 1191",
+    color: "#4a3728",
+    protagonist: {
+      name: "Altaïr Ibn-La'Ahad",
+      born: "1165, Masyaf",
+      died: "1257, Masyaf",
+      affiliation: "Levantine Brotherhood of Assassins",
+      rank: "Master Assassin / Mentor",
+      weapons: "Hidden Blade, Sword, Throwing Knives, Fists",
+      voice: "Philip Shahbaz"
+    },
+    cast: [
+      { name: "Al Mualim", role: "Mentor / Hidden Antagonist", desc: "Leader of the Levantine Brotherhood who strips Altaïr of his rank — later revealed as the true mastermind behind the Templar conspiracy." },
+      { name: "Malik Al-Sayf", role: "Fellow Assassin", desc: "Altaïr's wronged brother, maimed during the botched Solomon's Temple mission, who never fully forgives Altaïr's arrogance." },
+      { name: "Robert de Sablé", role: "Templar Grand Master", desc: "The Knight Templar orchestrating the plot to seize the Apple of Eden and end the Crusades through control of both armies." },
+      { name: "Kadar Al-Sayf", role: "Fallen Ally", desc: "Malik's younger brother, killed during the opening mission — his death haunts Altaïr throughout the story." }
+    ],
+    storyShort: "Master Assassin Altaïr is demoted after compromising the Brotherhood's mission at Solomon's Temple. To regain his rank, he must assassinate nine Templar targets across the Holy Land during the Third Crusade, uncovering a conspiracy that shakes his faith in the Creed itself.",
+    storyFull: "In 1191 during the Third Crusade, Master Assassin Altaïr Ibn-La'Ahad is sent with brothers Malik and Kadar to retrieve a Piece of Eden from Solomon's Temple. Altaïr's arrogance leads him to break all three tenets of the Creed, resulting in Kadar's death and Malik's severe injury. As punishment, Al Mualim, the Mentor of the Levantine Brotherhood, strips Altaïr of his rank and equipment. To earn redemption, Altaïr must assassinate nine Templar targets across Damascus, Acre, and Jerusalem—each revealed to be part of a conspiracy led by Robert de Sablé to acquire the Apple of Eden. As Altaïr eliminates each target, he learns their true aim was to end the Crusades through control rather than faith. Ultimately, he discovers Al Mualim himself is a traitor who sought the Apple's power for himself. Altaïr confronts and kills his former Mentor, becomes the new leader of the Brotherhood, and begins studying the Apple's secrets—setting the stage for centuries of Assassin-Templar conflict.",
+    modernDay: "Desmond Miles is kidnapped by Abstergo Industries and forced into the Animus to relive Altaïr's memories so the modern Templars can locate the Apple of Eden.",
+    keyTargets: ["Tamir (Damascus arms merchant)", "Garnier de Naplouse (Hospitalier leader)", "Talal (slave trader)", "Abu'l Nuqoud (corrupt merchant king)", "William of Montferrat (regent of Acre)", "Majd Addin (tyrannical regent)", "Jubair al Hakim (book-burning scholar)", "Sibrand (paranoid Teutonic leader)", "Robert de Sablé (Templar Grand Master)", "Al Mualim (corrupt Mentor)"]
+  },
+  {
+    id: "ac2",
+    image: "https://wallpapercave.com/wp/oRbdnWT.jpg", title: "Assassin's Creed II", year: 2009, order: 1476,
+    setting: "Renaissance Italy — Florence, Venice, Tuscany, Forlì",
+    era: "Italian Renaissance, 1476–1499",
+    color: "#2d1b69",
+    protagonist: {
+      name: "Ezio Auditore da Firenze",
+      born: "1459, Florence",
+      died: "1524, Florence",
+      affiliation: "Italian Brotherhood of Assassins",
+      rank: "Master Assassin / Mentor",
+      weapons: "Dual Hidden Blades, Hidden Gun, Sword, Poison Blade, Smoke Bombs",
+      voice: "Roger Craig Smith"
+    },
+    cast: [
+      { name: "Leonardo da Vinci", role: "Ally / Inventor", desc: "Renaissance genius and close friend who decodes Altaïr's Codex pages and builds Ezio's signature weapons, including the dual Hidden Blades." },
+      { name: "Mario Auditore", role: "Mentor / Uncle", desc: "Leader of the Monteriggioni Assassins who shelters the Auditore family and trains Ezio in the ways of the Brotherhood." },
+      { name: "Rodrigo Borgia", role: "Templar Grand Master", desc: "The man behind the execution of Ezio's father and brothers, seeking the Apple of Eden and the Vatican vault's secrets." },
+      { name: "Caterina Sforza", role: "Ally / Countess of Forlì", desc: "A cunning and politically powerful ally who aids Ezio against the Pazzi and Borgia conspiracies." }
+    ],
+    storyShort: "After his father and brothers are executed for treason, young Florentine nobleman Ezio Auditore embarks on a decades-long quest for vengeance that transforms him from a carefree youth into a Master Assassin, uncovering the ancient conflict between Assassins and Templars across Renaissance Italy.",
+    storyFull: "In 1476 Florence, 17-year-old Ezio Auditore lives a carefree life of privilege—until his father Giovanni and brothers Federico and Petruccio are falsely accused of treason and publicly hanged. Ezio escapes with his mother and sister to his uncle Mario's villa in Monteriggioni, where he learns of his Assassin heritage. Mario trains Ezio, who begins systematically hunting the conspirators—led by the Pazzi family and ultimately Rodrigo Borgia, the Templar Grand Master. Across Italy, Ezio allies with historical figures like Leonardo da Vinci (who upgrades his equipment with the iconic dual Hidden Blades and Hidden Gun), Niccolò Machiavelli, and Caterina Sforza. He retrieves the Codex pages left by Altaïr and discovers a vault beneath the Vatican containing a message from Minerva, a member of the First Civilization, speaking directly to 'Desmond' through Ezio across time. After defeating Rodrigo Borgia in a fistfight in the Sistine Chapel, Ezio spares him—realizing killing him won't bring his family back. He activates the vault and hears Minerva's warning about an impending solar catastrophe, setting up the modern-day stakes.",
+    modernDay: "Desmond escapes Abstergo with Lucy Stillman and joins fellow Assassins Shaun Hastings and Rebecca Crane, using the Animus 2.0 to train as an Assassin through Ezio's memories via the Bleeding Effect.",
+    keyTargets: ["Uberto Alberti (corrupt Gonfaloniere)", "Vieri de' Pazzi", "Francesco de' Pazzi", "Antonio Maffei (The Priest)", "Stefano da Bagnone (The Servant)", "Bernardo Baroncelli (The Banker)", "Francesco Salviati (Archbishop of Pisa)", "Jacopo de' Pazzi", "Emilio Barbarigo (Venetian merchant)", "Carlo Grimaldi (Doge's advisor)", "Marco Barbarigo (Doge of Venice)", "Silvio Barbarigo (The Judge)", "Dante Moro (The Bodyguard)", "Ludovico & Checco Orsi", "Girolamo Savonarola (DLC)", "Rodrigo Borgia"]
+  },
+  {
+    id: "acb",
+    image: "https://r4.wallpaperflare.com/wallpaper/575/318/511/assassin-s-creed-ii-video-games-assassin-s-creed-assassin-s-creed-brotherhood-wallpaper-1910d88d513a9d8b6677481f5061c66d.jpg", title: "Assassin's Creed: Brotherhood", year: 2010, order: 1499,
+    setting: "Renaissance Rome",
+    era: "Italian Renaissance, 1499–1507",
+    color: "#6b1a1a",
+    protagonist: {
+      name: "Ezio Auditore da Firenze",
+      born: "1459, Florence",
+      died: "1524, Florence",
+      affiliation: "Italian Brotherhood of Assassins",
+      rank: "Mentor of the Italian Brotherhood",
+      weapons: "Dual Hidden Blades, Hidden Gun, Crossbow, Sword, Poison Darts, Parachutes",
+      voice: "Roger Craig Smith"
+    },
+    cast: [
+      { name: "Cesare Borgia", role: "Templar Antagonist", desc: "Rodrigo's ruthless son who sacks Monteriggioni, kills Mario Auditore, and seizes the Apple of Eden to carve out his own empire." },
+      { name: "Niccolò Machiavelli", role: "Ally / Strategist", desc: "Sharp-witted diplomat and Assassin who helps Ezio rebuild the shattered Roman Brotherhood from the ground up." },
+      { name: "La Volpe", role: "Ally / Thieves' Guild Leader", desc: "Leader of Rome's thieves who provides intelligence and recruits across the city in the fight against Borgia rule." },
+      { name: "Micheletto Corella", role: "Templar Enforcer", desc: "Cesare's loyal and brutal enforcer who serves as one of the final obstacles standing between Ezio and the Borgias." }
+    ],
+    storyShort: "Ezio returns to Rome to rebuild the shattered Assassin Brotherhood and liberate the city from the Borgia family's iron grip, while Desmond and the modern-day team race to find the Apple of Eden's resting place before the Templars arrive.",
+    storyFull: "Immediately after the events of ACII, Ezio returns to Monteriggioni only to watch Cesare Borgia—Rodrigo's ruthless son—lay siege to the villa, kill Mario Auditore, and steal the Apple of Eden. Wounded and defeated, Ezio travels to Rome, the heart of Borgia power, where he discovers the Assassin Brotherhood has been nearly wiped out. With help from Niccolò Machiavelli, the courtesan La Volpe, and the mercenary Bartolomeo d'Alviano, Ezio systematically dismantles the Borgia empire. He destroys Cesare's war machines (designed by a coerced Leonardo da Vinci), kills the French general Octavian de Valois, and eliminates the corrupt Banker Juan Borgia. Ezio recruits and trains ordinary Roman citizens, building a Brotherhood that fights alongside him. He confronts Cesare in the Vatican and later, after Cesare is captured and escapes, tracks him to Viana, Spain, where he throws him from the castle walls—ending the Borgia tyranny. The modern-day segment reveals Juno, another First Civilization member, who manipulates Desmond into killing Lucy Stillman (revealed as a Templar double agent), causing Desmond to fall into a coma.",
+    modernDay: "Desmond and team arrive at the Colosseum vault to hide the Apple. Juno manipulates Desmond into stabbing Lucy, revealing her Templar allegiance. Desmond enters a coma.",
+    keyTargets: ["Il Carnefice (The Butcher)", "Malfatto (The Doctor)", "Silvestro Sabbatini (The Slave Trader)", "Octavian de Valois (French general)", "Juan Borgia (The Banker)", "Cesare Borgia", "Micheletto Corella (Cesare's enforcer)"]
+  },
+  {
+    id: "acr",
+    image: "https://wallpapercave.com/wp/wp2319109.jpg", title: "Assassin's Creed: Revelations", year: 2011, order: 1511,
+    setting: "Constantinople (Istanbul)",
+    era: "Ottoman Empire, 1511–1512",
+    color: "#1b4d3e",
+    protagonist: {
+      name: "Ezio Auditore da Firenze",
+      born: "1459, Florence",
+      died: "1524, Florence",
+      affiliation: "Italian Brotherhood of Assassins",
+      rank: "Mentor",
+      weapons: "Hookblade, Hidden Blade, Hidden Gun, Bombs (various), Sword",
+      voice: "Roger Craig Smith"
+    },
+    cast: [
+      { name: "Yusuf Tazim", role: "Ally / Guild Leader", desc: "Charismatic leader of the Constantinople Assassins who aids Ezio's hunt for Altaïr's five memory seals." },
+      { name: "Sofia Sartor", role: "Love Interest", desc: "A Venetian bookseller who becomes Ezio's companion and confidante during his final journey in Constantinople." },
+      { name: "Prince Ahmet", role: "Templar-Aligned Antagonist", desc: "Ottoman prince and Byzantine remnant ally who seeks control of the empire and the secrets within Masyaf's library." },
+      { name: "Suleiman", role: "Ally / Future Sultan", desc: "A clever young student Ezio befriends, later known to history as Suleiman the Magnificent." }
+    ],
+    storyShort: "An aging Ezio travels to Constantinople to unlock the secrets of Altaïr's hidden library beneath Masyaf, while a comatose Desmond explores his own fractured memories on Animus Island to find a way to wake up—a poignant finale to both Altair and Ezio's sagas.",
+    storyFull: "In 1511, 52-year-old Ezio travels to the mountain fortress of Masyaf—Altaïr's ancient stronghold—seeking the wisdom contained in Altaïr's legendary hidden library. The entrance requires five memory seals Altaïr scattered across Constantinople. In the vibrant Ottoman capital, Ezio allies with the local Assassin guild led by Yusuf Tazim, befriends a young student named Suleiman (the future Sultan), and falls for Sofia Sartor, a Venetian bookseller. He navigates a complex political landscape where the Templars—backed by Prince Ahmet and the Byzantine remnant—seek control of the region. Through the seals, Ezio relives key moments of Altaïr's later life: his exile from Masyaf, his return to kill the corrupt Abbas, and his final moments sealing the Apple within his library. Ezio collects all seals, defeats Ahmet's forces, and opens the library beneath Masyaf—only to find Altaïr's skeleton, the Apple, and no books. Realizing the library was Altaïr's final resting place and that the true treasure was wisdom itself, Ezio lays down his weapons, speaks directly to Desmond through the ages, and retires from the Assassin life. Simultaneously, Desmond completes his Animus Island journey, reconciles with the construct of Subject 16 (Clay Kaczmarek), and awakens to his destiny.",
+    modernDay: "Desmond awakens from his coma on Animus Island. He learns the Grand Temple's location in New York and that he must open it to prevent the solar catastrophe of December 21, 2012.",
+    keyTargets: ["Leandros (Byzantine Templar captain)", "Müezzinzade (Byzantine Templar)", "Tarik Barleti (Janissary captain)", "Shahkulu (renegade leader)", "Manuel Palaiologos (Byzantine heir)", "Prince Ahmet"]
+  },
+  {
+    id: "ac3",
+    image: "https://wallpaperaccess.com/full/2355620.jpg", title: "Assassin's Creed III", year: 2012, order: 1754,
+    setting: "Colonial America — Boston, New York, Frontier",
+    era: "American Revolution, 1754–1783",
+    color: "#1b3a6b",
+    protagonist: {
+      name: "Ratonhnhaké:ton / Connor Kenway",
+      born: "1756, Kanatahséton (Mohawk Valley)",
+      died: "Unknown (early 19th century)",
+      affiliation: "Colonial Brotherhood of Assassins",
+      rank: "Master Assassin",
+      weapons: "Hidden Blade, Tomahawk, Bow, Rope Dart, Flintlock Pistols",
+      voice: "Noah Watts"
+    },
+    cast: [
+      { name: "Haytham Kenway", role: "Templar / Father", desc: "Connor's British Templar father, whose conflicting loyalties lead to a tragic confrontation between father and son." },
+      { name: "Achilles Davenport", role: "Mentor", desc: "The last surviving colonial Assassin, who trains Connor and rebuilds the Brotherhood from the Davenport Homestead." },
+      { name: "Charles Lee", role: "Templar Antagonist", desc: "The Templar directly responsible for the destruction of Connor's village and the death of his mother." },
+      { name: "George Washington", role: "Historical Ally", desc: "Revolutionary commander whose uneasy alliance with Connor reveals the moral complexity of the war for independence." }
+    ],
+    storyShort: "Half-Mohawk, half-British warrior Connor Kenway joins the Assassin Brotherhood to protect his people and his land, becoming an unlikely key figure in the American Revolution while hunting the Templars who destroyed his family—culminating in a heartbreaking confrontation with his own father.",
+    storyFull: "The story begins with Haytham Kenway, a British Templar who arrives in colonial America in 1754 to establish a Templar presence. He rescues and falls for Kaniehtí:io (Ziio), a Mohawk woman, conceiving a son—Ratonhnhaké:ton. Years later, young Ratonhnhaké:ton watches as Templars (led by Charles Lee) burn his village; his mother dies in the fire. Believing the Templars responsible, he seeks out Achilles Davenport (the last colonial Assassin) on the Davenport Homestead and trains for years, taking the name Connor. As the American Revolution erupts, Connor walks the tightrope between Assassins and Patriots, befriending George Washington and Samuel Adams. He discovers that his father Haytham leads the colonial Templars. Father and son form a temporary, tense alliance before their ideologies force them apart. Connor kills Haytham in a tragic confrontation at Fort George. He then pursues Charles Lee—the man responsible for his mother's death—to a tavern, where they share a silent drink before Connor fatally stabs him. In the modern day, Desmond uses the Grand Temple's key to activate the global aurora borealis device, sacrificing his life to shield Earth from the Second Disaster—fulfilling the prophecy and saving humanity.",
+    modernDay: "Desmond Miles sacrifices himself to activate the Grand Temple's protective field, saving Earth from the 2012 solar catastrophe. His death marks the end of his trilogy and reshapes the modern-day narrative forever.",
+    keyTargets: ["William Johnson (land speculator)", "John Pitcairn (British marine)", "Thomas Hickey (counterfeiter)", "Benjamin Church (traitor)", "Nicholas Biddle (Templar naval captain)", "Haytham Kenway (his father)", "Charles Lee"]
+  },
+  {
+    id: "ac4",
+    image: "https://wallpaperaccess.com/full/1881380.jpg", title: "Assassin's Creed IV: Black Flag", year: 2013, order: 1715,
+    setting: "Caribbean — Nassau, Havana, Kingston",
+    era: "Golden Age of Piracy, 1715–1722",
+    color: "#1b5e6b",
+    protagonist: {
+      name: "Edward James Kenway",
+      born: "1693, Swansea, Wales",
+      died: "1735, London, England",
+      affiliation: "British Brotherhood of Assassins (joined later in life)",
+      rank: "Master Assassin",
+      weapons: "Dual Hidden Blades, Dual Cutlasses, Four Flintlock Pistols, Blowpipe",
+      voice: "Matt Ryan"
+    },
+    cast: [
+      { name: "Edward 'Blackbeard' Thatch", role: "Ally / Pirate Captain", desc: "The legendary pirate captain and Edward's close friend, slain by the British navy in the latter half of the story." },
+      { name: "Mary Read", role: "Ally / Templar Agent", desc: "A pirate secretly working for the Templars, whose loyalty to Edward complicates her hidden allegiance." },
+      { name: "Bartholomew Roberts", role: "Antagonist / The Sage", desc: "A reincarnated First Civilization Sage who outmaneuvers Edward in the race to find the Observatory." },
+      { name: "Laureano de Torres", role: "Templar Grand Master", desc: "The Spanish Templar leader pursuing the Observatory's power to track and control anyone in the world." }
+    ],
+    storyShort: "Welsh privateer-turned-pirate Edward Kenway stumbles into the Assassin-Templar conflict while chasing fortune and glory on the high seas, accidentally killing a rogue Assassin and assuming his identity—leading him on a journey from selfish greed to reluctant hero aboard the legendary Jackdaw.",
+    storyFull: "In 1715, Edward Kenway, a Welsh privateer, seeks riches to prove himself worthy of his estranged wife Caroline. After a shipwreck, he kills a rogue Assassin named Duncan Walpole and assumes his identity, arriving in Havana to meet the Templar Grand Master Laureano de Torres. Edward learns of the Observatory—a First Civilization site that can track anyone through a drop of blood—and sees it as his ticket to wealth. He joins the pirate republic in Nassau, sailing with legends like Edward 'Blackbeard' Thatch, Benjamin Hornigold, Mary Read, and Charles Vane. As he chases the Observatory, Edward's greed alienates everyone around him: his wife dies, his pirate friends fall one by one (Blackbeard slain by the British, Hornigold turns Templar, Mary Read dies of fever after imprisonment), and he loses the Observatory to the Sage Bartholomew Roberts. When his daughter Jennifer arrives, Edward finally transforms. He kills the traitorous Roberts and the Templar Torres, seals the Observatory, and returns to England. There he joins the British Brotherhood, raises his daughter and son Haytham, and becomes a Master Assassin. In 1735, he is killed by mercenaries sent by Reginald Birch, a Templar who would raise young Haytham as his own—setting the stage for the Kenway tragedy across generations.",
+    modernDay: "An unnamed Abstergo Entertainment analyst (the player) explores Edward's memories for a pirate-themed entertainment product, while secretly being used by modern-day Assassins to uncover the Observatory's location before the Templars do.",
+    keyTargets: ["Julien du Casse (Templar arms dealer)", "Laurens Prins (slave trader)", "Woodes Rogers (Governor of Nassau)", "Benjamin Hornigold (turned Templar)", "Bartholomew Roberts (The Sage)", "Laureano de Torres (Templar Grand Master)"]
+  },
+  {
+    id: "acro",
+    image: "https://wallpaperaccess.com/full/2205735.jpg", title: "Assassin's Creed Rogue", year: 2014, order: 1752,
+    setting: "North Atlantic — New York, River Valley, Arctic",
+    era: "Seven Years' War, 1752–1760",
+    color: "#2b4d2b",
+    protagonist: {
+      name: "Shay Patrick Cormac",
+      born: "c. 1731, New York City",
+      died: "Unknown",
+      affiliation: "Colonial Brotherhood (former) / Templar Order",
+      rank: "Templar Knight",
+      weapons: "Hidden Blade, Sword, Air Rifle, Grenade Launcher",
+      voice: "Steven Piovesan"
+    },
+    cast: [
+      { name: "Achilles Davenport", role: "Former Mentor / Target", desc: "Shay's old Assassin mentor, branded an enemy after Shay defects to expose the Brotherhood's reckless pursuit of Precursor sites." },
+      { name: "Liam O'Brien", role: "Former Best Friend", desc: "Shay's closest Assassin friend, who shoots and nearly kills him after his defection — their friendship turned to bitter rivalry." },
+      { name: "Colonel George Monro", role: "Templar Ally", desc: "The compassionate Templar officer who rescues and recruits Shay, offering him honor where the Brotherhood offered condemnation." },
+      { name: "Adéwalé", role: "Assassin Target", desc: "Edward Kenway's former quartermaster, now a senior Assassin whom Shay is forced to hunt down." }
+    ],
+    storyShort: "Assassin-turned-Templar Shay Cormac defects from the Brotherhood after a mission to retrieve a Precursor artifact triggers a devastating earthquake that destroys Lisbon, leading him to hunt his former brothers to prevent further catastrophes—a rare and morally complex perspective from the Templar side.",
+    storyFull: "Shay Cormac, a young Irish-American Assassin trained by Achilles Davenport alongside his best friend Liam O'Brien, grows disillusioned after the Brotherhood sends him to retrieve a Piece of Eden from Lisbon in 1755. The artifact triggers a massive earthquake that destroys the city and kills thousands—mirroring the disaster that devastated Port-au-Prince years earlier. Shay realizes the Brotherhood's search for Precursor sites is causing these catastrophes. When he steals the manuscript containing the sites' locations, Achilles's Brotherhood brands him a traitor. Shot by Liam and left for dead, Shay is rescued by Colonel George Monro, a compassionate Templar who treats him with genuine honor. Shay joins the Templar Order and systematically eliminates his former Assassin brothers—Kesegowaase, Adéwalé (Edward Kenway's former quartermaster), Hope Jensen, and Louis-Joseph Gaultier—to prevent them from triggering more earthquakes. His final confrontation with Achilles in the frozen Arctic ends with Shay shooting Achilles in the knee (the injury that cripples him in ACIII) but sparing his life. Shay recovers the manuscript, preventing further disasters. In a chilling post-credits scene, Shay travels to Versailles, France in 1776 and assassinates Charles Dorian—father of Arno Dorian, setting up the events of AC Unity and tying the entire Kenway saga together.",
+    modernDay: "The modern-day analyst is recruited to the Templar Order by Juhani Otso Berg, exploring Shay's memories to learn the Assassins' vulnerabilities and viewing the eternal conflict from the Templar perspective.",
+    keyTargets: ["Adéwalé (former Assassin, Edward's quartermaster)", "Kesegowaase (Assassin)", "Hope Jensen (Assassin)", "Louis-Joseph Gaultier (Assassin)", "Liam O'Brien (former best friend)", "Charles Dorian (Arno's father)"]
+  },
+  {
+    id: "acu",
+    image: "https://wallpaperaccess.com/full/2076051.jpg", title: "Assassin's Creed Unity", year: 2014, order: 1789,
+    setting: "Revolutionary Paris & Versailles",
+    era: "French Revolution, 1789–1794",
+    color: "#3d1c1c",
+    protagonist: {
+      name: "Arno Victor Dorian",
+      born: "1768, Versailles",
+      died: "Unknown",
+      affiliation: "French Brotherhood of Assassins",
+      rank: "Master Assassin (self-exiled, later returned)",
+      weapons: "Phantom Blade, Hidden Blade, Rapier, Pistol, Guillotine Gun",
+      voice: "Dan Jeannotte"
+    },
+    cast: [
+      { name: "Élise de la Serre", role: "Love Interest / Templar", desc: "François's daughter and a committed Templar, whose forbidden romance with Arno drives the story to its tragic climax." },
+      { name: "Pierre Bellec", role: "Assassin Mentor", desc: "The grizzled Assassin who trains Arno in the Bastille and is later killed by him after turning against the Brotherhood's ideals." },
+      { name: "François-Thomas Germain", role: "Sage Antagonist", desc: "A rogue Templar Sage who manipulates the French Revolution and the Reign of Terror to reshape the Templar Order." },
+      { name: "François de la Serre", role: "Templar Grand Master / Adoptive Father", desc: "The Templar leader who raises Arno after his father's death, later murdered in a conspiracy that sets the plot in motion." }
+    ],
+    storyShort: "Arno Dorian, a young Frenchman adopted into a Templar family after his Assassin father's murder, joins the Assassin Brotherhood to hunt his adoptive father's killer while pursuing a star-crossed romance with his Templar childhood friend Élise de la Serre amidst the chaos of the French Revolution.",
+    storyFull: "In 1776 Versailles, young Arno witnesses his father Charles Dorian's murder by Shay Cormac (as seen in Rogue's ending). He is adopted by François de la Serre, the Templar Grand Master—though Arno never learns of the Templar-Assassin connection. Years later, Arno is framed for François's murder and imprisoned in the Bastille, where he meets the grizzled Assassin Pierre Bellec. Escaping during the storming of the Bastille, Arno joins the Assassin Brotherhood to hunt François's real killer. His investigation reunites him with Élise de la Serre, François's daughter and a committed Templar. Despite their conflicting allegiances, they fall deeply in love and work together to uncover a conspiracy within both orders. They discover that the rogue Templar François-Thomas Germain—a Sage and exiled former Grand Master candidate—orchestrated François's murder and now manipulates the French Revolution through Maximilien Robespierre and the Reign of Terror to reshape the Templar Order according to his own twisted vision. Arno is expelled from the Brotherhood after killing Bellec (who tried to murder Élise for being a Templar). Together, Arno and Élise confront and kill Germain at the Temple, but Élise dies in the battle—sacrificing herself to give Arno the opening. Broken, Arno drifts through Paris until the Dead Kings DLC, where he finds new purpose, masters a Piece of Eden from the Saint-Denis temple, and reconnects with the Brotherhood as a wiser, more mature Master Assassin.",
+    modernDay: "The modern-day is framed through a Helix console: an Assassin named Bishop recruits the player to explore Arno's memories to locate the Sage Germain's remains before Abstergo can. The 'present day' is primarily the player themselves.",
+    keyTargets: ["Charles Gabriel Sivert (Templar conspirator)", "Duchesneau (King of Beggars)", "Marie Lévesque (Templar financier)", "La Touche (corrupt military officer)", "Pierre Bellec (Assassin extremist)", "Louis-Michel le Peletier", "Maximilien de Robespierre (disgraced)", "François-Thomas Germain (Sage, Grand Master)"]
+  },
+  {
+    id: "acs",
+    image: "https://wallpapercave.com/wp/wp1870334.jpg", title: "Assassin's Creed Syndicate", year: 2015, order: 1868,
+    setting: "Victorian London",
+    era: "Industrial Revolution, 1868",
+    color: "#3d2b1a",
+    protagonist: {
+      name: "Jacob & Evie Frye",
+      born: "1847, Crawley, England",
+      died: "Unknown",
+      affiliation: "British Brotherhood of Assassins",
+      rank: "Master Assassins",
+      weapons: "Hidden Blade, Kukri, Cane Sword, Revolver, Hallucinogenic Darts, Rope Launcher",
+      voice: "Paul Amos (Jacob) / Victoria Atkin (Evie)"
+    },
+    cast: [
+      { name: "Crawford Starrick", role: "Templar Grand Master", desc: "The Templar leader whose absolute control over London's industry and politics the Frye twins set out to destroy." },
+      { name: "Henry Green", role: "Ally / Evie's Love Interest", desc: "An Indian Assassin operating in London who assists Evie's search for the Shroud of Eden and later marries her." },
+      { name: "Lucy Thorne", role: "Templar Occultist", desc: "An occultist Templar obsessed with the Shroud of Eden, standing as Evie's primary rival throughout the story." },
+      { name: "Maxwell Roth", role: "Templar Gang Leader", desc: "The flamboyant and ruthless leader of the Blighters, one of Jacob's key targets in the fight for London's streets." }
+    ],
+    storyShort: "Twin Assassins Jacob and Evie Frye arrive in Victorian London to liberate the city from Templar Grand Master Crawford Starrick's industrial stranglehold—Jacob through brute force building a street gang called the Rooks, and Evie through stealth and cunning in pursuit of a powerful Piece of Eden: the Shroud of Turin.",
+    storyFull: "In 1868, twin Assassins Jacob and Evie Frye travel to London against the Council's orders to end the Templar Grand Master Crawford Starrick's absolute control over the city. London has become a Templar fortress—every industry, criminal enterprise, and political office serves Starrick's iron grip. The twins have opposing approaches: Jacob is brash, chaotic, and wants to build a gang (the Rooks) to take the city by force; Evie is calculating, stealthy, and focused on finding the Shroud of Eden, a Piece of Eden with miraculous healing powers. Jacob systematically assassinates Starrick's lieutenants—the doctor John Elliotson, the transportation magnate Pearl Attaway, the banker Philip Twopenny, the crime lord Maxwell Roth, and the military figure James Brudenell—liberating boroughs as the Rooks expand across London. Evie investigates the Shroud, opposing the occultist Lucy Thorne. Their clashing approaches cause tension, but they ultimately reunite for the final assault: the twins defeat Starrick together in Buckingham Palace despite the Grand Master wearing the Shroud itself. With Starrick dead and London freed, Queen Victoria knights the twins for their service. Evie marries the Indian Assassin Henry Green and stays in London; Jacob continues leading the Rooks and becomes a legendary figure in the city's criminal underworld.",
+    modernDay: "The Initiate (player) explores the Frye twins' memories via Helix to locate the Shroud of Eden. Shaun Hastings, Rebecca Crane, and Galina Voronina guide the player. The Shroud is ultimately recovered by the Templar agent Violet da Costa, who is secretly working for Juno.",
+    keyTargets: ["Rupert Ferris (factory overseer)", "John Elliotson (The Doctor)", "Pearl Attaway (Starrick's cousin)", "Philip Twopenny (The Banker)", "Maxwell Roth (Blighter gang leader)", "Lucy Thorne (occultist)", "James Brudenell, 7th Earl of Cardigan", "Crawford Starrick (Templar Grand Master)"]
+  },
+  {
+    id: "aco",
+    image: "https://images3.alphacoders.com/842/thumb-1920-842558.jpg", title: "Assassin's Creed Origins", year: 2017, order: -49,
+    setting: "Ancient Egypt — Siwa, Alexandria, Memphis, Giza",
+    era: "Ptolemaic Egypt, 49–43 BCE",
+    color: "#c8a44e",
+    protagonist: {
+      name: "Bayek of Siwa",
+      born: "c. 85 BCE, Siwa",
+      died: "Unknown",
+      affiliation: "Hidden Ones (Co-founder)",
+      rank: "Hidden One / Mentor",
+      weapons: "Hidden Blade (first prototype), Khopesh, Shield, Bows, Spears",
+      voice: "Abubakar Salim"
+    },
+    cast: [
+      { name: "Aya / Amunet", role: "Co-Protagonist / Wife", desc: "Bayek's wife and equal partner in vengeance, who later becomes Amunet and assassinates Julius Caesar in Rome." },
+      { name: "Cleopatra", role: "Historical Ally", desc: "The Ptolemaic queen who allies with Bayek and Aya temporarily before her own political ambitions create new tensions." },
+      { name: "Julius Caesar", role: "Historical Antagonist", desc: "The Roman general whose betrayal of Bayek and Aya sets up his eventual assassination by Aya in the Roman Senate." },
+      { name: "Khemu", role: "Bayek's Son", desc: "Bayek's young son, whose tragic death at the hands of the Order of the Ancients fuels Bayek's entire quest for vengeance." }
+    ],
+    storyShort: "Bayek, the last Medjay of Siwa, and his wife Aya embark on a quest for vengeance after their son Khemu is killed, hunting the masked Order of the Ancients across the vast expanse of ancient Egypt—a journey that ultimately gives birth to the Hidden Ones, the precursor to the entire Assassin Brotherhood.",
+    storyFull: "In 49 BCE Ptolemaic Egypt, Bayek—the respected Medjay (protector) of Siwa—and his young son Khemu are captured by the Order of the Ancients, a secret society seeking to open an Isu vault beneath Siwa. In a tragic struggle, Bayek accidentally kills his own son while trying to fight off their captors—a moment of devastating guilt that fuels everything that follows. Bayek and his wife Aya begin systematically hunting the five masked Ancients: the Heron (Rudjek), the Ibis (Medunamun), the Ram (Pothinus), the Crocodile (Berenike), and the Scarab (Taharqa). Their journey takes them across the stunning expanse of Egypt—from Alexandria's great library to the sands of Giza, from the Nile Delta to the desolate Desheret Desert. They ally with Cleopatra (temporarily), cross paths with Julius Caesar, and uncover a conspiracy that goes far deeper than their personal tragedy. Aya—who operates under the codename Amunet—kills the Snake (Eudoros) and the Scorpion. After Caesar betrays them, Aya travels to Rome where she eventually assassinates him in the Senate. Having eliminated the Ancients, Bayek and Aya realize their shared path must now diverge. In 47 BCE at the Memphis bureau, they formalize the Hidden Ones, creating the creed, the hidden blade tradition (with Bayek's sacrificial ring finger removal becoming the ritual), and the maxim 'Nothing is true; everything is permitted.' Aya becomes Amunet, building the Roman branch; Bayek becomes the first Mentor in Egypt. Their love endures, but their duty separates them—making them the true founders of everything the Brotherhood becomes.",
+    modernDay: "Layla Hassan, an Abstergo researcher, uses her modified Animus to explore Bayek's memories without Abstergo's knowledge. She discovers a hidden tomb in Egypt and ultimately joins the Assassins alongside William Miles.",
+    keyTargets: ["Rudjek (The Heron)", "Medunamun (The Ibis)", "Eudoros (The Snake)", "Taharqa (The Scarab)", "Berenike (The Crocodile)", "Pothinus (The Scorpion)", "Lucius Septimius (The Jackal)", "Flavius Metellus (The Lion)"]
+  },
+  {
+    id: "acod",
+    image: "https://wallpapercave.com/wp/wp3662827.jpg", title: "Assassin's Creed Odyssey", year: 2018, order: -431,
+    setting: "Ancient Greece — Kephallonia, Athens, Sparta, Aegean Islands",
+    era: "Peloponnesian War, 431–422 BCE",
+    color: "#1b5e8a",
+    protagonist: {
+      name: "Kassandra (canon) / Alexios",
+      born: "c. 458 BCE, Sparta",
+      died: "2018 CE (immortal via Staff of Hermes)",
+      affiliation: "Mercenary / Ally of Hidden Ones",
+      rank: "Bearer of the Staff of Hermes Trismegistus",
+      weapons: "Broken Spear of Leonidas, Sword, Bow, Dagger",
+      voice: "Melissanthi Mahut (Kassandra) / Michael Antonakos (Alexios)"
+    },
+    cast: [
+      { name: "Deimos / Alexios", role: "Sibling Antagonist", desc: "Kassandra's brainwashed brother, raised as the Cult of Kosmos's most feared enforcer and her tragic mirror throughout the journey." },
+      { name: "Myrrine", role: "Mother", desc: "Kassandra's mother, believed dead, who resurfaces as a key figure in unraveling the family's fractured history." },
+      { name: "Pythagoras", role: "Father / Isu Keeper", desc: "Kassandra's true father, a philosopher hiding a deeper truth about the Isu and the Staff of Hermes Trismegistus." },
+      { name: "Aspasia", role: "Cult Leader / The Ghost of Kosmos", desc: "An influential Athenian advisor secretly leading the Cult of Kosmos behind the scenes of the entire Peloponnesian War." }
+    ],
+    storyShort: "A Spartan mercenary with a mysterious bloodline, Kassandra (or Alexios) traverses a vast, war-torn ancient Greece to reunite her shattered family and destroy the Cult of Kosmos—a proto-Templar organization manipulating both Athens and Sparta for total control of the Greek world.",
+    storyFull: "In 431 BCE, at the onset of the Peloponnesian War, a Spartan child is thrown from Mount Taygetos on the Pythia's prophecy. The child—Kassandra (canon)—survives and grows up as a misthios (mercenary) on Kephallonia under the care of the conman Markos. Her life changes when a mysterious client named Elpenor contracts her to assassinate 'The Wolf' of Sparta—her own estranged father, Nikolaos. Kassandra journeys across Greece, navigating the war between Athens and Sparta, to uncover the truth of her family. She discovers her mother Myrrine is alive, her baby brother Alexios is actually Deimos—the Cult of Kosmos's brainwashed enforcer—and the Cult has orchestrated the entire war to install a New World Order under their absolute control. Kassandra systematically dismantles the Cult's vast web: the Eyes of Kosmos, Silver Vein, Delian League, Peloponnesian League, Heroes of the Cult, Gods of the Aegean, and Worshippers of the Bloodline—each branch falling as their sage is eliminated. She retrieves the Staff of Hermes Trismegistus from her true father Pythagoras in Atlantis, inheriting biological immortality. Through two epic DLCs, she confronts the Isu's legacy: in 'Legacy of the First Blade,' she has a child with Darius's son and witnesses the first Hidden Blade; in 'The Fate of Atlantis,' she visits the Isu realms and confronts her destiny as the Keeper. She lives for over 2,400 years, finally passing the Staff to Layla Hassan in 2018 and dying peacefully—her millennia-long vigil complete.",
+    modernDay: "Layla Hassan travels to Greece, recovers the Spear of Leonidas, and eventually meets the immortal Kassandra in Atlantis. Kassandra passes her the Staff of Hermes Trismegistus and dies peacefully after 2,400+ years of life—the longest-lived protagonist in the series.",
+    keyTargets: ["Elpenor (Eyes of Kosmos)", "Sotera (Eyes Sage)", "The Chimera (Silver Vein)", "Polemon (Silver Vein Sage)", "Brison (Delian League)", "Podarkes (Delian League Sage)", "Skylax (Peloponnesian League)", "Pausanias (Peloponnesian League Sage)", "Exekias (Heroes of the Cult)", "The Hydra (Gods of the Aegean)", "The Mytilenian Shark (Gods Sage)", "Diona (Worshippers of the Bloodline)", "Deimos (sibling)", "Aspasia (Ghost of Kosmos)"]
+  },
+  {
+    id: "acv",
+    image: "https://r4.wallpaperflare.com/wallpaper/133/976/850/assassin-s-creed-valhalla-viking-video-games-video-game-art-digital-art-hd-wallpaper-176cc745f89fca20d14e9556766fa43b.jpg", title: "Assassin's Creed Valhalla", year: 2020, order: 872,
+    setting: "Dark Ages England & Norway",
+    era: "Viking Expansion, 872–878 CE",
+    color: "#2b3d4d",
+    protagonist: {
+      name: "Eivor Varinsdottir (canon: female)",
+      born: "847 CE, Norway",
+      died: "Unknown",
+      affiliation: "Raven Clan / Hidden Ones (ally)",
+      rank: "Jarlskona (Clan Leader)",
+      weapons: "Hidden Blade (worn visibly on top), Dane Axe, Shield, Varin's Axe, Bow",
+      voice: "Cecilie Stenspil (female) / Magnus Bruun (male)"
+    },
+    cast: [
+      { name: "Sigurd Styrbjornsson", role: "Adoptive Brother", desc: "Eivor's brother and clan co-leader, increasingly consumed by his belief that he is the reincarnation of the god Odin." },
+      { name: "Basim Ibn Ishaq", role: "Hidden One / Hidden Antagonist", desc: "A Hidden One who introduces Eivor to the Order of the Ancients — secretly the reincarnated Loki seeking revenge on Odin." },
+      { name: "King Aelfred of Wessex", role: "Grand Maegester", desc: "The secretly devout king who covertly leads the Order of the Ancients while publicly appearing to oppose them." },
+      { name: "Hytham", role: "Hidden One Ally", desc: "A Hidden One who establishes the Brotherhood's English bureau and trains Eivor in their methods alongside Basim." }
+    ],
+    storyShort: "Viking raider Eivor leads their Raven Clan from war-torn Norway to the fractured kingdoms of England to build a new settlement, forging alliances with Saxon kingdoms while clashing with the Order of the Ancients—and discovering a shocking connection to the Norse god Odin within their own soul.",
+    storyFull: "In 872 CE Norway, Eivor Varinsdottir—a fierce warrior of the Raven Clan—watches their parents killed by the warlord Kjotve the Cruel. Orphaned and adopted by King Styrbjorn, Eivor grows up alongside their adoptive brother Sigurd. After years of preparation, they finally slay Kjotve and reclaim their honor. When Harald Fairhair moves to unite all Norway under one crown, Sigurd refuses to bend the knee and leads the Raven Clan west to England to settle new lands. Eivor builds the settlement of Ravensthorpe, forging alliances across the fractured kingdoms of Mercia, Northumbria, Wessex, and East Anglia. Eivor encounters the Hidden Ones (Basim Ibn Ishaq and Hytham), who teach them about the Order of the Ancients and gift them a Hidden Blade. Famously declaring 'I will not hide. Glory to the slain!', Eivor refuses full Hidden One membership—wearing the blade visibly on top of their forearm instead of beneath—but agrees to hunt the Order's members across England. Eivor eliminates the Wardens of Wealth, War, and Law, and ultimately faces the Grand Maegester—King Aelfred of Wessex—who secretly despises the Order and has been helping dismantle it to replace it with a god-centered Templar-like faith. Sigurd becomes obsessed with his 'divine nature' as a reincarnation of the Isu Odin and is captured and tortured by the fanatical Fulke. Eivor's visions reveal they too carry Odin's consciousness. Ultimately, Eivor rejects Odin's influence, stays with the Raven Clan, and becomes Jarlskona. Basim—revealed as the reincarnation of Loki seeking revenge on Odin—fights Eivor and is trapped in the Yggdrasil machine for over a thousand years until freed in the modern day.",
+    modernDay: "Layla Hassan explores Eivor's memories to locate the Yggdrasil device. She meets the resurrected Basim (reincarnated Loki), who takes her place. Layla sacrifices herself, and Basim joins the modern-day Assassins under William Miles.",
+    keyTargets: ["Kjotve the Cruel", "Leofgifu (Warden of Wealth)", "Sister Frideswid (Warden of Wealth)", "Tata (Warden of Wealth)", "Havelok (Warden of War)", "Gorm Kjotvesson (Warden of War)", "Audun (Warden of War)", "Birstan (Warden of Law)", "Hilda (Warden of Law)", "Selwyn (Warden of Law)", "Fulke (The Instrument)", "King Aelfred (Grand Maegester)"]
+  },
+  {
+    id: "acm",
+    image: "https://wallpapercave.com/wp/wp12300513.jpg", title: "Assassin's Creed Mirage", year: 2023, order: 861,
+    setting: "9th Century Baghdad",
+    era: "Islamic Golden Age, 861 CE",
+    color: "#8b5e3c",
+    protagonist: {
+      name: "Basim Ibn Ishaq",
+      born: "c. 835 CE, Samarra, Abbasid Caliphate",
+      died: "Unknown (alive in 2020+ as resurrected Loki)",
+      affiliation: "Hidden Ones",
+      rank: "Master Hidden One",
+      weapons: "Hidden Blade, Sword, Throwing Knives, Smoke Bombs, Assassin's Focus",
+      voice: "Lee Majdoub"
+    },
+    cast: [
+      { name: "Roshan", role: "Mentor", desc: "The Hidden One master who rescues young Basim, trains him at Alamut, and tries to protect him from awakening his Isu nature." },
+      { name: "Nehal", role: "Mysterious Figure", desc: "A recurring presence in Basim's life, ultimately revealed to be a manifestation of his repressed memories as the reborn Loki." },
+      { name: "Qabiha", role: "Order Antagonist", desc: "The hidden head of the Order of the Ancients in Baghdad, orchestrating the corruption Basim spends the game dismantling." },
+      { name: "Al-Ghul", role: "Order Target", desc: "Known as 'The Slaver,' one of the Order of the Ancients members infiltrating Baghdad's power structures." }
+    ],
+    storyShort: "A young street thief in the golden age of Baghdad, Basim Ibn Ishaq joins the Hidden Ones to uncover the truth behind his mysterious nightmares and a masked Order threatening the city—a personal journey of self-discovery that awakens a dark, otherworldly connection echoing across centuries.",
+    storyFull: "In 861 CE, during the golden age of Baghdad, Basim Ibn Ishaq lives as a nimble street thief in the bustling district of Anbar. Plagued by disturbing nightmares of a monstrous jinni, Basim dreams of joining the legendary Hidden Ones. His life changes when his childhood friend Nehal helps him steal a mysterious artifact from the Caliph's palace—an act witnessed by the Hidden One Master Roshan. After a botched heist results in tragedy, Basim is rescued by Roshan and taken to the Hidden Ones' mountain fortress of Alamut, the birthplace of the Brotherhood. There he trains under Roshan's rigorous guidance, mastering the hidden blade, parkour, and the full arsenal of an assassin. Basim returns to Baghdad to investigate the Order of the Ancients, which has infiltrated the city's power structures across four districts: Harbiyah, Abbasiyah, Karkh, and the Round City. He eliminates key Order members—Al-Ghul (the slaver), Al-Mardikhwar (the warlord), Al-Pairika (the treasurer), and others—while uncovering their connection to a First Civilization artifact buried beneath Alamut. Throughout his journey, the enigmatic Nehal appears, pushing Basim to question Roshan's authority and the Hidden Ones' secrecy. The truth emerges horrifically: Nehal is not real—she is a manifestation of Basim's repressed Isu memories as the reincarnation of the Norse god Loki. Roshan knows this and tries to prevent Basim from awakening. In the Al-Bahamut chamber beneath Alamut, Basim merges with Nehal/Loki, fully awakening as the reborn Isu. Though terrified of what he has become, Basim promises to use his newfound understanding for good. The post-credits scene connects directly to Valhalla, showing Basim in the 21st century beginning his work with modern-day Assassins.",
+    modernDay: "William Miles watches from an Animus feed, monitoring Basim's memories. The framing is minimal—focused entirely on Basim's 9th-century journey as a prequel to his role in Valhalla.",
+    keyTargets: ["Al-Ghul (The Slaver)", "Al-Mardikhwar (The Warlord)", "Al-Pairika (The Treasurer)", "Al-A'esama (The Concubine)", "Qabiha (Head of the Order)"]
+  },
+  {
+    id: "acsh",
+    image: "https://wallpapercave.com/wp/wp13980231.jpg", title: "Assassin's Creed Shadows", year: 2024, order: 1579,
+    setting: "Feudal Japan",
+    era: "Sengoku Period, 1579–1580s",
+    color: "#8b1a1a",
+    protagonist: {
+      name: "Naoe (shinobi) & Yasuke (samurai)",
+      born: "Naoe: Iga Province, Japan / Yasuke: c. 1555, Mozambique",
+      died: "Unknown",
+      affiliation: "Japanese Brotherhood (Naoe) / Ally of Assassins (Yasuke)",
+      rank: "Shinobi Assassin (Naoe) / Samurai (Yasuke)",
+      weapons: "Naoe: Hidden Blade, Katana, Tanto, Kusarigama, Kunai / Yasuke: Kanabō, Naginata, Katana, Teppō Rifle",
+      voice: "Masumi Tsunoda (Naoe) / Zeke Alton (Yasuke)"
+    },
+    cast: [
+      { name: "Naoe", role: "Co-Protagonist / Shinobi", desc: "A talented shinobi seeking vengeance for her father's death and her village's destruction at the hands of the Shinbakufu." },
+      { name: "Yasuke", role: "Co-Protagonist / Samurai", desc: "The first foreign-born samurai under Oda Nobunaga, set adrift after his lord's betrayal and death at Honnō-ji." },
+      { name: "Oda Nobunaga", role: "Historical Figure", desc: "The powerful daimyo whose unification campaign and sudden death set the stage for the chaos Naoe and Yasuke must navigate." },
+      { name: "The Shinbakufu (Onryo)", role: "Shadow Organization", desc: "A masked organization secretly manipulating Japan's warring daimyo, hunted across the game by both protagonists." }
+    ],
+    storyShort: "In feudal Japan during the chaotic Sengoku period, the shinobi Naoe and the legendary African samurai Yasuke form an unlikely alliance to hunt a shadowy organization threatening to plunge Japan into eternal war—each bringing unique skills and a distinct perspective on honor and justice.",
+    storyFull: "In 1579 Japan, during the brutal Sengoku period of civil war, two unlikely heroes must unite against the Shinbakufu (Onryo)—a shadow organization manipulating the warring daimyo for their own ends. Naoe, a talented shinobi from the Iga Province, witnesses her village and her father—a Hidden One—destroyed by masked warriors of the Shinbakufu, setting her on a path of vengeance and justice. Yasuke, a legendary African samurai who arrived in Japan as a servant of Jesuit missionaries before becoming the first foreign samurai under Oda Nobunaga, finds himself adrift after Nobunaga's betrayal and death at Honnō-ji. The dual-protagonist system offers two completely distinct playstyles: Naoe embodies classic stealth-focused Assassin's Creed—parkour, hidden blade assassinations, blending with crowds, and precise shinobi tools including the kusarigama and kunai. Yasuke represents raw combat prowess—head-on fighting with massive kanabō clubs, naginata polearms, and the newly introduced teppō rifle, able to charge through doors and take on multiple enemies at once. Players can switch freely between the two. They hunt the Shinbakufu's masked leaders across a richly detailed feudal Japan: bustling castle towns, serene Buddhist temples, snow-covered mountain passes, and war-torn battlefields. The story weaves through major historical moments of the Sengoku era—including Nobunaga's unification campaign and the political upheaval following his death—while the evolving bond between Naoe and Yasuke forms the emotional core of two outsiders finding belonging and purpose in each other.",
+    modernDay: "The modern-day framing continues exploration of Abstergo's Helix data and the ongoing Assassin-Templar conflict, with implications for the reincarnated Isu storyline introduced in Valhalla and Mirage.",
+    keyTargets: ["Members of the Shinbakufu (Onryo) — the most recent entry at time of writing"]
+  }
+];
+
+/* ── Build Games Grid ── */
+function buildGameCard(g) {
+  return '<div class="game-card reveal" data-id="' + g.id + '" data-search="' +
+    (g.title + ' ' + g.protagonist.name + ' ' + g.setting + ' ' + g.era).toLowerCase() + '" onclick="openGameById(\'' + g.id + '\')">' +
+    '<div class="game-card-img">' +
+      '<div class="bg" style="background-image:url(' + "'" + g.image + "'" + ');"></div>' +
+      '<div class="year-badge">' + g.year + '</div>' +
+      '<div class="era-badge">' + g.era + '</div>' +
+    '</div>' +
+    '<div class="game-card-body">' +
+      '<h3>' + g.title + '</h3>' +
+      '<div class="setting">' + g.setting + '</div>' +
+      '<div class="proto-label">Protagonist</div>' +
+      '<div class="proto-name">' + g.protagonist.name + '</div>' +
+      '<div class="story-blurb">' + g.storyShort + '</div>' +
+      '<div class="click-hint">Click for full details →</div>' +
+    '</div>' +
+  '</div>';
+}
+
+var gamesGrid = document.getElementById('gamesGrid');
+gamesGrid.innerHTML = games.map(buildGameCard).join('');
+
+/* ── Build Timeline ── */
+var timelineWrap = document.getElementById('timelineWrap');
+var chrono = games.slice().sort(function(a, b) { return a.order - b.order; });
+timelineWrap.innerHTML = chrono.map(function(g) {
+  return '<div class="tl-item reveal" onclick="openGameById(\'' + g.id + '\')">' +
+    '<div class="era">' + g.era.split(', ')[0] + '</div>' +
+    '<h3>' + g.title + '</h3>' +
+    '<p>' + g.protagonist.name + ' — ' + g.setting.split(' — ')[0] + '</p>' +
+  '</div>';
+}).join('');
+
+/* ── Search ── */
+document.getElementById('searchInput').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  var cards = document.querySelectorAll('.game-card');
+  cards.forEach(function(c) {
+    c.classList.toggle('hidden', q !== '' && c.dataset.search.indexOf(q) === -1);
+  });
+});
+
+/* ── Modal ── */
+var overlay = document.getElementById('modalOverlay');
+var modalContent = document.getElementById('modalContent');
+var currentIdx = 0;
+
+function openGameById(id) {
+  var idx = -1;
+  for (var i = 0; i < games.length; i++) { if (games[i].id === id) { idx = i; break; } }
+  if (idx === -1) return;
+  currentIdx = idx;
+  renderDetail(idx);
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+  overlay.classList.remove('active');
+  document.body.classList.remove('modal-open');
+}
+
+function renderDetail(idx) {
+  var g = games[idx];
+  var p = g.protagonist;
+  var targetsHtml = g.keyTargets.map(function(t) { return '<span>&#9673;</span> ' + t; }).join('<br>');
+  var protoHtml = '<div class="proto-sheet"><h4>' + p.name + '</h4><div class="proto-grid">' +
+    '<div class="field"><strong>Born</strong>' + p.born + '</div>' +
+    '<div class="field"><strong>Died</strong>' + p.died + '</div>' +
+    '<div class="field"><strong>Affiliation</strong>' + p.affiliation + '</div>' +
+    '<div class="field"><strong>Rank</strong>' + p.rank + '</div>' +
+    '<div class="field"><strong>Signature Weapons</strong>' + p.weapons + '</div>' +
+    '<div class="field"><strong>Voice Actor</strong>' + p.voice + '</div>' +
+  '</div></div>';
+
+  var castHtml = '';
+  if (g.cast && g.cast.length) {
+    castHtml = '<div class="detail-block"><h3>Supporting Characters</h3><div class="cast-grid">' +
+      g.cast.map(function(c) {
+        return '<div class="cast-card" style="--cast-color:' + g.color + ';">' +
+          '<div class="cast-name">' + c.name + '</div>' +
+          '<div class="cast-role">' + c.role + '</div>' +
+          '<div class="cast-desc">' + c.desc + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div></div>';
+  }
+
+  var prevDisabled = idx === 0 ? 'disabled' : '';
+  var nextDisabled = idx === games.length - 1 ? 'disabled' : '';
+
+  modalContent.innerHTML =
+    '<button class="close-btn" onclick="closeModal()">&times;</button>' +
+    '<h2>' + g.title + '</h2>' +
+    '<div class="modal-setting">' + g.setting + '</div>' +
+    '<div class="modal-year">' + g.era + ' — Released ' + g.year + '</div>' +
+    '<div class="detail-block"><h3>Complete Story</h3><p>' + g.storyFull + '</p></div>' +
+    '<div class="detail-block"><h3>Protagonist Details</h3>' + protoHtml + '</div>' +
+    castHtml +
+    '<div class="detail-block"><h3>Modern Day / Framing Narrative</h3><p>' + g.modernDay + '</p></div>' +
+    '<div class="detail-block"><h3>Key Assassination Targets</h3><div class="targets-list">' + targetsHtml + '</div></div>' +
+    '<div class="modal-nav">' +
+      '<button onclick="navigateModal(-1)" ' + prevDisabled + '>← Previous</button>' +
+      '<div class="counter">' + (idx + 1) + ' / ' + games.length + '</div>' +
+      '<button onclick="navigateModal(1)" ' + nextDisabled + '>Next →</button>' +
+    '</div>';
+  modalContent.scrollTop = 0;
+}
+
+function navigateModal(dir) {
+  var newIdx = currentIdx + dir;
+  if (newIdx < 0 || newIdx >= games.length) return;
+  currentIdx = newIdx;
+  renderDetail(newIdx);
+  modalContent.scrollTop = 0;
+}
+
+/* ── Keyboard ── */
+document.addEventListener('keydown', function(e) {
+  if (!overlay.classList.contains('active')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') navigateModal(-1);
+  if (e.key === 'ArrowRight') navigateModal(1);
+});
+
+overlay.addEventListener('click', function(e) {
+  if (e.target === overlay) closeModal();
+});
+
+/* ── Preloader ── */
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('preloader').classList.add('hidden');
+  }, 600);
+});
+
+/* ── Nav ── */
+var navbar = document.getElementById('navbar');
+var hamburger = document.getElementById('hamburger');
+var navLinks = document.getElementById('navLinks');
+
+window.addEventListener('scroll', function() {
+  navbar.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+hamburger.addEventListener('click', function() {
+  hamburger.classList.toggle('active');
+  navLinks.classList.toggle('open');
+});
+
+var navAs = navLinks.querySelectorAll('a');
+for (var n = 0; n < navAs.length; n++) {
+  navAs[n].addEventListener('click', function() {
+    hamburger.classList.remove('active');
+    navLinks.classList.remove('open');
+  });
+}
+
+/* ── Particles ── */
+var pc = document.getElementById('particles');
+for (var i = 0; i < 50; i++) {
+  var pt = document.createElement('div');
+  pt.classList.add('particle');
+  pt.style.left = Math.random() * 100 + '%';
+  pt.style.animationDuration = (6 + Math.random() * 14) + 's';
+  pt.style.animationDelay = Math.random() * 10 + 's';
+  pt.style.width = pt.style.height = (1 + Math.random() * 3) + 'px';
+  pc.appendChild(pt);
+}
+
+/* ── Reveal on scroll ── */
+var revealEls = document.querySelectorAll('.reveal');
+var revealObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+revealEls.forEach(function(el) { revealObs.observe(el); });
+
+/* ── Observe dynamically added reveal elements ── */
+setTimeout(function() {
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    if (!el.classList.contains('visible')) revealObs.observe(el);
+  });
+}, 100);
+
+/* ── Newsletter ── */
+function handleNewsletter(e) {
+  e.preventDefault();
+  var btn = e.target.querySelector('button');
+  var orig = btn.textContent;
+  btn.textContent = 'Welcome, Assassin';
+  btn.style.background = '#2e7d32';
+  e.target.querySelector('input').value = '';
+  setTimeout(function() { btn.textContent = orig; btn.style.background = ''; }, 3000);
+}
+
+/* ── Parallax crest ── */
+document.addEventListener('mousemove', function(e) {
+  var crest = document.querySelector('.hero-crest');
+  if (!crest) return;
+  crest.style.transform = 'translate(' + ((window.innerWidth/2 - e.clientX) / 40) + 'px, ' + ((window.innerHeight/2 - e.clientY) / 40) + 'px)';
+});
+
+/* ── Active nav section ── */
+var sections = document.querySelectorAll('section[id]');
+var navA = navLinks.querySelectorAll('a:not(.btn-join)');
+window.addEventListener('scroll', function() {
+  var cur = '';
+  sections.forEach(function(s) {
+    if (window.scrollY >= s.offsetTop - 120) cur = s.getAttribute('id');
+  });
+  navA.forEach(function(a) {
+    a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--ac-white)' : '';
+  });
+});
+</script>
+</body>
+</html>
