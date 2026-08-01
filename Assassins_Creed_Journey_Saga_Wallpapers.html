@@ -49,20 +49,14 @@
         }
         #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         #preloader .logo-icon {
-            width: 80px; height: 80px;
-            border: 3px solid var(--ac-red);
-            transform: rotate(45deg);
+            width: 350px; height: 350px;
+            object-fit: contain;
             animation: preloaderPulse 1.4s ease-in-out infinite;
-            position: relative;
-        }
-        #preloader .logo-icon::after {
-            content: '';
-            position: absolute; inset: 8px;
-            border: 2px solid var(--ac-gold);
+            display: block;
         }
         @keyframes preloaderPulse {
-            0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(0.9); }
-            50% { opacity: 1; transform: rotate(45deg) scale(1); }
+            0%, 100% { opacity: 0.3; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1); }
         }
 
         nav {
@@ -641,7 +635,7 @@
 </head>
 <body>
 
-    <div id="preloader"><div class="logo-icon"></div></div>
+    <div id="preloader"><img src="https://raw.githubusercontent.com/Skyborg141/Assasins-Creed-Website/main/aclogo.png" class="logo-icon" alt="Loading"></div>
 
     <nav id="navbar">
         <div class="nav-inner">
