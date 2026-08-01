@@ -64,33 +64,6 @@ Assasins-Creed-Website/
 
 All content is driven by a single `games` array in the embedded `<script>` — each entry holds the game's metadata, protagonist details, cast, full story text, modern-day framing, and key targets. Adding a new game means adding one object to that array; the grid, timeline, search index, and modal all render from it automatically.
 
-## 🛠️ Customization
-
-To add or edit a game, find the `games` array and add an object following the existing schema:
-
-```js
-{
-  id: "ac-example",
-  image: "https://...",
-  title: "Assassin's Creed: Example",
-  year: 2025,
-  order: 1500,          // in-universe year, used for timeline sorting (negative = BCE)
-  setting: "...",
-  era: "...",
-  color: "#hexcolor",
-  protagonist: { name, born, died, affiliation, rank, weapons, voice },
-  cast: [ { name, role, desc }, ... ],
-  storyShort: "...",
-  storyFull: "...",
-  modernDay: "...",
-  keyTargets: [ "...", "..." ]
-}
-```
-
-## 📄 License
-
-The code in this repository is free to use and modify for personal/non-commercial purposes. All *Assassin's Creed* names, characters, artwork, and related IP remain the property of **Ubisoft Entertainment**.
-
 ## 🙌 Credits
 
 Built by [Shouvik Banerjee](https://github.com/Skyborg141) as a fan tribute to the *Assassin's Creed* series.
